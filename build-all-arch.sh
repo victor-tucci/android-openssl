@@ -2,11 +2,14 @@
 #
 # http://wiki.openssl.org/index.php/Android
 #
+# needs ANDROID_NDK_ROOT set correctly (e.g. to /opt/android/android-ndk-r15c)
+
 set -e
 rm -rf prebuilt
 mkdir prebuilt
 
-archs=(armeabi arm64-v8a mips mips64 x86 x86_64)
+#archs=(armeabi arm64-v8a mips mips64 x86 x86_64)
+archs=(armeabi arm64-v8a x86 x86_64)
 
 for arch in ${archs[@]}; do
     xLIB="/lib"
@@ -20,7 +23,6 @@ for arch in ${archs[@]}; do
             _ANDROID_TARGET_SELECT=arch-arm64-v8a
             _ANDROID_ARCH=arch-arm64
             _ANDROID_EABI=aarch64-linux-android-4.9
-            #no xLIB="/lib64"
             configure_platform="linux-generic64 -DB_ENDIAN" ;;
         "mips")
             _ANDROID_TARGET_SELECT=arch-mips
@@ -53,12 +55,12 @@ for arch in ${archs[@]}; do
     . ./setenv-android-mod.sh
 
     echo "CROSS COMPILE ENV : $CROSS_COMPILE"
-    cd openssl-1.0.1j
+    cd openssl-OpenSSL_1_0_2l
 
     xCFLAGS="-DSHARED_EXTENSION=.so -fPIC -DOPENSSL_PIC -DDSO_DLFCN -DHAVE_DLFCN_H -mandroid -I$ANDROID_DEV/include -B$ANDROID_DEV/$xLIB -O3 -fomit-frame-pointer -Wall"
 
     perl -pi -e 's/install: all install_docs install_sw/install: install_docs install_sw/g' Makefile.org
-    ./Configure shared no-threads no-asm no-zlib no-ssl2 no-ssl3 no-comp no-hw no-engine --openssldir=/usr/local/ssl/android-19/ $configure_platform $xCFLAGS
+    ./Configure shared no-threads no-asm no-zlib no-ssl2 no-ssl3 no-comp no-hw no-engine $configure_platform $xCFLAGS
 
     # patch SONAME
 
@@ -73,8 +75,8 @@ for arch in ${archs[@]}; do
 
     file libcrypto.so
     file libssl.so
-    cp libcrypto.so ../prebuilt/${arch}/libcrypto.so
-    cp libssl.so ../prebuilt/${arch}/libssl.so
+    cp libcrypto.a libcrypto.so ../prebuilt/${arch}
+    cp libssl.a libssl.so ../prebuilt/${arch}
     cd ..
 done
 exit 0
